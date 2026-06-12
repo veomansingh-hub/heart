@@ -26,6 +26,10 @@ export default function HeartbeatWidget() {
 
   // Web Audio API Heartbeat Synthesizer (Lub-Dub sound)
   const synthHeartbeat = () => {
+    // iPhone & Android haptic feedback synchronization (double-pulse "Lub-Dub")
+    if (typeof navigator !== 'undefined' && navigator.vibrate) {
+      navigator.vibrate([50, 110, 35]);
+    }
     if (!audioEnabled) return;
     try {
       const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
