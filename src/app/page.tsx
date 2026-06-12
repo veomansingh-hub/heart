@@ -1,65 +1,89 @@
-import Image from "next/image";
+'use client';
+
+import React from 'react';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { useGSAP } from '@gsap/react';
+import HeartbeatWidget from '@/components/HeartbeatWidget';
+
+gsap.registerPlugin(ScrollTrigger);
 
 export default function Home() {
+  useGSAP(() => {
+    // Elegant reveals for letter sections
+    gsap.fromTo('.letter-reveal',
+      { y: 35, opacity: 0 },
+      {
+        y: 0,
+        opacity: 1,
+        duration: 1.4,
+        ease: 'power3.out',
+        stagger: 0.2,
+        scrollTrigger: {
+          trigger: '.letter-section',
+          start: 'top 75%',
+          toggleActions: 'play none none reverse'
+        }
+      }
+    );
+  });
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <div className="w-full text-zinc-950 flex flex-col font-sans select-none bg-transparent">
+      {/* Hero Intro with Beating Heart */}
+      <section className="relative min-h-screen flex flex-col justify-center items-center px-8 py-20 bg-transparent text-center">
+        <div className="max-w-4xl space-y-6 mt-12 flex flex-col items-center">
+          <span className="text-rose-500 font-mono tracking-widest text-xs uppercase border-b border-rose-200 pb-2">
+            M ♡ F • Udaipur
+          </span>
+          
+          <h1 className="text-4xl sm:text-6xl font-light tracking-tight leading-tight text-zinc-900">
+            A Beautiful <span className="font-semibold text-rose-500">Leap of Faith</span>.
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+
+          {/* Detailed Beating Heart Widget */}
+          <div className="py-2">
+            <HeartbeatWidget />
+          </div>
+
+          <p className="max-w-2xl text-base sm:text-lg text-zinc-500 font-light leading-relaxed">
+            Every beat of this heart tells a story. A story that began with a single click and became a promise of a lifetime.
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </section>
+
+      {/* The Love Letter Section */}
+      <section className="letter-section min-h-screen flex flex-col justify-center px-8 sm:px-16 md:px-24 py-32 bg-transparent">
+        <div className="max-w-3xl space-y-12 mx-auto">
+          <h2 className="letter-reveal text-3xl sm:text-5xl font-light tracking-tight text-zinc-900 leading-tight">
+            Thank you for taking <span className="text-rose-500 font-medium">the risk</span>.
+          </h2>
+          
+          <div className="space-y-8 text-lg sm:text-xl text-zinc-700 font-light leading-relaxed">
+            <p className="letter-reveal">
+              Among the millions of voices in this world, I am so incredibly thankful that you chose to respond to me on <span className="font-medium text-rose-600">Jeevansathi</span>. It was the spark that set our journey in motion.
+            </p>
+            
+            <p className="letter-reveal">
+              When you took that leap of faith—the risk to travel, come, and meet me in the beautiful city of lakes, <span className="font-medium text-rose-600">Udaipur</span>—you gave our story its beginning.
+            </p>
+            
+            <p className="letter-reveal text-2xl font-normal text-zinc-900 italic border-l-4 border-rose-400 pl-6 my-10">
+              “I promise you, with everything I am, that this will be the best risk of your life.”
+            </p>
+
+            <p className="letter-reveal">
+              Our rhythms are aligned, and our hearts beat as one. From that first meeting in Udaipur to forever, I am devoted to walking this path beside you.
+            </p>
+          </div>
         </div>
-      </main>
+      </section>
+
+      {/* Footer */}
+      <footer className="px-8 sm:px-16 md:px-24 py-16 border-t border-zinc-100 bg-transparent flex justify-between items-center text-zinc-400 font-mono text-xs font-semibold">
+        <p>© 2026. Devoted Forever.</p>
+        <span className="text-rose-500 font-bold tracking-widest animate-pulse">MANSINGH ♡ FALAKRAJ</span>
+      </footer>
     </div>
   );
 }
