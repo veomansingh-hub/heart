@@ -102,17 +102,27 @@ export default function HeartbeatWidget() {
           start: 54,
           enablejsapi: 1,
           controls: 0,
-          autoplay: 0,
-          mute: 0,
+          autoplay: 1,
+          mute: 1, // must be muted to autoplay on modern browsers
+          loop: 1,
+          playlist: 'Ar48yzjn1PE'
         },
         events: {
           onReady: () => {
             setYtReady(true);
-            playerRef.current.setVolume(35);
+            try {
+              playerRef.current.mute();
+              playerRef.current.playVideo();
+            } catch (e) {}
           },
           onStateChange: (event: any) => {
             if (event.data === window.YT.PlayerState.PLAYING) {
-              setIsPlayingSong(true);
+              try {
+                const isMuted = playerRef.current.isMuted();
+                setIsPlayingSong(!isMuted);
+              } catch (e) {
+                setIsPlayingSong(true);
+              }
             } else {
               setIsPlayingSong(false);
             }
@@ -129,8 +139,23 @@ export default function HeartbeatWidget() {
   // Continuous Heartbeat Squeeze Loop
   useEffect(() => {
     const initAudio = () => {
-      if (audioCtxRef.current && audioCtxRef.current.state === 'suspended') {
-        audioCtxRef.current.resume();
+      try {
+        const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+        if (!AudioContextClass) return;
+        let isFirstTime = false;
+        if (!audioCtxRef.current) {
+          audioCtxRef.current = new AudioContextClass();
+          isFirstTime = true;
+        }
+        if (audioCtxRef.current && audioCtxRef.current.state === 'suspended') {
+          audioCtxRef.current.resume().then(() => {
+            if (isFirstTime) {
+              synthHeartbeat(); // Trigger haptic and sound instantly on first successful unlock!
+            }
+          }).catch(e => console.log("Audio resume failed:", e));
+        }
+      } catch (e) {
+        console.error("Audio Context initialization failed:", e);
       }
     };
     // Add multiple event types to initialize and resume sound + vibration immediately on first load interaction
@@ -168,6 +193,7 @@ export default function HeartbeatWidget() {
     const playWithFadeIn = () => {
       if (fadeInterval) clearInterval(fadeInterval);
       try {
+        playerRef.current.unMute();
         playerRef.current.playVideo();
         setIsPlayingSong(true);
         let vol = 0;
@@ -194,6 +220,7 @@ export default function HeartbeatWidget() {
     const stopVideo = () => {
       if (fadeInterval) clearInterval(fadeInterval);
       try {
+        playerRef.current.mute();
         playerRef.current.pauseVideo();
         setIsPlayingSong(false);
       } catch (e) {}
