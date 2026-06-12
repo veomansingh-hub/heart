@@ -28,7 +28,7 @@ export default function HeartbeatWidget() {
   const synthHeartbeat = () => {
     // iPhone & Android haptic feedback synchronization (double-pulse "Lub-Dub")
     if (typeof navigator !== 'undefined' && navigator.vibrate) {
-      navigator.vibrate([50, 110, 35]);
+      navigator.vibrate([160, 60, 120]);
     }
     if (!audioEnabled) return;
     try {
