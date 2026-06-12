@@ -128,12 +128,14 @@ export default function HeartbeatWidget() {
 
   // Continuous Heartbeat Squeeze Loop
   useEffect(() => {
-    const handleDocClick = () => {
+    const initAudio = () => {
       if (audioCtxRef.current && audioCtxRef.current.state === 'suspended') {
         audioCtxRef.current.resume();
       }
     };
-    document.addEventListener('click', handleDocClick);
+    // Add multiple event types to initialize and resume sound + vibration immediately on first load interaction
+    const events = ['click', 'touchstart', 'scroll', 'keydown', 'mousedown'];
+    events.forEach(evt => document.addEventListener(evt, initAudio, { passive: true }));
 
     const heart = heartRef.current;
     if (!heart) return;
@@ -153,39 +155,60 @@ export default function HeartbeatWidget() {
 
     return () => {
       heartTimeline.kill();
-      document.removeEventListener('click', handleDocClick);
+      events.forEach(evt => document.removeEventListener(evt, initAudio));
     };
   }, [audioEnabled, isPlayingSong]);
 
-  // ScrollTrigger integration for autoplay/pause
+  // ScrollTrigger integration for autoplay/pause (Fade volume smoothly from low to high and keep playing unless scrolled back up)
   useEffect(() => {
     if (!ytReady || !playerRef.current) return;
 
+    let fadeInterval: NodeJS.Timeout | null = null;
+
+    const playWithFadeIn = () => {
+      if (fadeInterval) clearInterval(fadeInterval);
+      try {
+        playerRef.current.playVideo();
+        setIsPlayingSong(true);
+        let vol = 0;
+        playerRef.current.setVolume(vol);
+
+        fadeInterval = setInterval(() => {
+          if (!playerRef.current) {
+            if (fadeInterval) clearInterval(fadeInterval);
+            return;
+          }
+          vol += 3;
+          if (vol >= 35) {
+            playerRef.current.setVolume(35);
+            if (fadeInterval) clearInterval(fadeInterval);
+          } else {
+            playerRef.current.setVolume(vol);
+          }
+        }, 80); // Fades in from 0% to 35% in about 900ms
+      } catch (e) {
+        console.error("Autoplay failed:", e);
+      }
+    };
+
+    const stopVideo = () => {
+      if (fadeInterval) clearInterval(fadeInterval);
+      try {
+        playerRef.current.pauseVideo();
+        setIsPlayingSong(false);
+      } catch (e) {}
+    };
+
     const trigger = ScrollTrigger.create({
       trigger: '.letter-section',
-      start: 'top 65%',
-      end: 'bottom 25%',
-      onEnter: () => {
-        playerRef.current.playVideo();
-        playerRef.current.setVolume(35);
-        setIsPlayingSong(true);
-      },
-      onLeave: () => {
-        playerRef.current.pauseVideo();
-        setIsPlayingSong(false);
-      },
-      onEnterBack: () => {
-        playerRef.current.playVideo();
-        playerRef.current.setVolume(35);
-        setIsPlayingSong(true);
-      },
-      onLeaveBack: () => {
-        playerRef.current.pauseVideo();
-        setIsPlayingSong(false);
-      }
+      start: 'top 85%',
+      onEnter: playWithFadeIn,
+      onEnterBack: playWithFadeIn,
+      onLeaveBack: stopVideo // Only pause when scrolling back up above the section
     });
 
     return () => {
+      if (fadeInterval) clearInterval(fadeInterval);
       trigger.kill();
     };
   }, [ytReady]);
@@ -195,20 +218,25 @@ export default function HeartbeatWidget() {
     const disk = diskRef.current;
     if (!disk) return;
 
-    let rotTween: gsap.core.Tween | null = null;
+    // Continuous, infinite smooth rotation
+    const rotTween = gsap.to(disk, {
+      rotation: 360,
+      duration: 3.5,
+      repeat: -1,
+      ease: 'none',
+      paused: true
+    });
+
     if (isPlayingSong) {
-      rotTween = gsap.to(disk, {
-        rotation: 360,
-        duration: 2.2,
-        repeat: -1,
-        ease: 'none'
-      });
+      // Smoothly spin up
+      gsap.to(rotTween, { timeScale: 1, duration: 0.8, ease: 'power1.out', onStart: () => rotTween.play() });
     } else {
-      gsap.killTweensOf(disk);
+      // Smoothly spin down to a stop
+      gsap.to(rotTween, { timeScale: 0, duration: 1.2, ease: 'power1.out', onComplete: () => rotTween.pause() });
     }
 
     return () => {
-      if (rotTween) rotTween.kill();
+      rotTween.kill();
     };
   }, [isPlayingSong]);
 
