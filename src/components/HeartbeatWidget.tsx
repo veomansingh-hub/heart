@@ -4,7 +4,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
-// Register ScrollTrigger
 gsap.registerPlugin(ScrollTrigger);
 
 declare global {
@@ -41,36 +40,39 @@ export default function HeartbeatWidget() {
 
       const now = ctx.currentTime;
 
+      // Volume adjustments: 200% (1.4 gain) by default, lightens to 30% (0.22 gain) when music is playing
+      const baseGain = isPlayingSong ? 0.22 : 1.4;
+
       // "Lub" Beat
       const osc1 = ctx.createOscillator();
       const gain1 = ctx.createGain();
       osc1.frequency.setValueAtTime(58, now);
       osc1.frequency.exponentialRampToValueAtTime(10, now + 0.16);
-      gain1.gain.setValueAtTime(0.7, now);
+      gain1.gain.setValueAtTime(baseGain, now);
       gain1.gain.exponentialRampToValueAtTime(0.01, now + 0.16);
       osc1.connect(gain1);
       gain1.connect(ctx.destination);
       osc1.start(now);
       osc1.stop(now + 0.17);
 
-      // "Dub" Beat
+      // "Dub" Beat (slightly softer and higher pitched)
       const osc2 = ctx.createOscillator();
       const gain2 = ctx.createGain();
       const dubTime = now + 0.16;
       osc2.frequency.setValueAtTime(53, dubTime);
       osc2.frequency.exponentialRampToValueAtTime(10, dubTime + 0.12);
-      gain2.gain.setValueAtTime(0.5, dubTime);
+      gain2.gain.setValueAtTime(baseGain * 0.75, dubTime);
       gain2.gain.exponentialRampToValueAtTime(0.01, dubTime + 0.12);
       osc2.connect(gain2);
       gain2.connect(ctx.destination);
       osc2.start(dubTime);
       osc2.stop(dubTime + 0.13);
     } catch (e) {
-      // Audio autoplay restriction catch
+      // Autoplay block catch
     }
   };
 
-  // 1. Load YouTube Iframe Player API & Setup Player
+  // Load YouTube Player API
   useEffect(() => {
     if (!window.YT) {
       const tag = document.createElement('script');
@@ -79,12 +81,10 @@ export default function HeartbeatWidget() {
       firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
     }
 
-    // Set callback for API Ready
     window.onYouTubeIframeAPIReady = () => {
       initializePlayer();
     };
 
-    // If script is already loaded
     if (window.YT && window.YT.Player) {
       initializePlayer();
     }
@@ -104,10 +104,9 @@ export default function HeartbeatWidget() {
         events: {
           onReady: () => {
             setYtReady(true);
-            playerRef.current.setVolume(35); // Set default volume to 35% as requested
+            playerRef.current.setVolume(35);
           },
           onStateChange: (event: any) => {
-            // Check if playing
             if (event.data === window.YT.PlayerState.PLAYING) {
               setIsPlayingSong(true);
             } else {
@@ -119,12 +118,11 @@ export default function HeartbeatWidget() {
     }
 
     return () => {
-      // Clean up callback references
       window.onYouTubeIframeAPIReady = undefined;
     };
   }, []);
 
-  // 2. Continuous Heartbeat Squeeze Loop & Interaction Support
+  // Continuous Heartbeat Squeeze Loop
   useEffect(() => {
     const handleDocClick = () => {
       if (audioCtxRef.current && audioCtxRef.current.state === 'suspended') {
@@ -153,9 +151,9 @@ export default function HeartbeatWidget() {
       heartTimeline.kill();
       document.removeEventListener('click', handleDocClick);
     };
-  }, [audioEnabled]);
+  }, [audioEnabled, isPlayingSong]);
 
-  // 3. ScrollTrigger integration: play on entering .letter-section, stop on leaving
+  // ScrollTrigger integration for autoplay/pause
   useEffect(() => {
     if (!ytReady || !playerRef.current) return;
 
@@ -188,14 +186,13 @@ export default function HeartbeatWidget() {
     };
   }, [ytReady]);
 
-  // 4. Handle Disk Rotation Animation on Play/Pause state change
+  // Disk Rotation Animation
   useEffect(() => {
     const disk = diskRef.current;
     if (!disk) return;
 
     let rotTween: gsap.core.Tween | null = null;
     if (isPlayingSong) {
-      // Continuous vinyl rotation
       rotTween = gsap.to(disk, {
         rotation: 360,
         duration: 2.2,
@@ -203,7 +200,6 @@ export default function HeartbeatWidget() {
         ease: 'none'
       });
     } else {
-      // Pause rotation
       gsap.killTweensOf(disk);
     }
 
@@ -215,7 +211,6 @@ export default function HeartbeatWidget() {
   const toggleManualPlayback = () => {
     if (!ytReady || !playerRef.current) return;
     
-    // Resume audio context to bypass autoplay policies
     if (audioCtxRef.current) {
       audioCtxRef.current.resume();
     }
@@ -231,17 +226,16 @@ export default function HeartbeatWidget() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center gap-8 py-6 relative select-none">
+    <div className="flex flex-col items-center justify-center gap-6 py-6 relative select-none w-full max-w-xs sm:max-w-md mx-auto">
       
-      {/* Target element for YouTube API integration */}
       <div id="yt-player-container" className="absolute opacity-0 pointer-events-none w-1 h-1" />
 
-      {/* Beating Ultra-Realistic Anatomical Heart Graphic */}
-      <div className="relative flex flex-col items-center justify-center">
+      {/* Beating Ultra-Realistic Anatomical Heart Graphic (Sized responsively for mobile) */}
+      <div className="relative flex flex-col items-center justify-center w-full">
         <div
           ref={heartRef}
           onClick={toggleManualPlayback}
-          className="interactive cursor-pointer w-72 h-72 relative flex items-center justify-center will-change-transform filter"
+          className="interactive cursor-pointer w-60 h-60 sm:w-72 sm:h-72 relative flex items-center justify-center will-change-transform filter"
           style={{ filter: 'drop-shadow(0 0 10px rgba(239, 68, 68, 0.4))' }}
         >
           <svg
@@ -294,8 +288,8 @@ export default function HeartbeatWidget() {
           </svg>
 
           {/* Central dedication overlay */}
-          <div className="absolute inset-0 flex flex-col items-center justify-center text-center pt-12">
-            <span className="font-mono text-[9px] font-black text-white/95 uppercase tracking-widest bg-zinc-950/75 px-3 py-1 rounded-full border border-white/10 shadow-sm">
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-center pt-10 sm:pt-12">
+            <span className="font-mono text-[8px] sm:text-[9px] font-black text-white/95 uppercase tracking-widest bg-zinc-950/75 px-3 py-1 rounded-full border border-white/10 shadow-sm">
               M ♡ F
             </span>
           </div>
@@ -303,7 +297,7 @@ export default function HeartbeatWidget() {
       </div>
 
       {/* Manual Controller: Rotating Vinyl Record Disk Button */}
-      <div className="flex flex-col items-center gap-4">
+      <div className="flex flex-col items-center gap-4 w-full">
         
         {/* Rotating Vinyl Disk Button */}
         <div
@@ -314,20 +308,16 @@ export default function HeartbeatWidget() {
             backgroundImage: `radial-gradient(circle, #27272a 15%, #09090b 16%, #09090b 35%, #18181b 36%, #18181b 50%, #27272a 51%, #09090b 70%)`
           }}
         >
-          {/* Concentric Vinyl Grooves Overlay */}
           <div className="absolute inset-1 rounded-full border border-zinc-800/40 pointer-events-none" />
           <div className="absolute inset-3 rounded-full border border-zinc-800/20 pointer-events-none" />
           
-          {/* Centered Glowing Red Label */}
           <div className="w-8 h-8 rounded-full bg-rose-600 flex items-center justify-center border border-rose-500 shadow-[0_0_8px_#ef4444] z-10">
             {isPlayingSong ? (
-              // Pause Icon
               <div className="flex gap-0.5 items-center justify-center">
                 <span className="w-1 h-3 bg-white rounded-full" />
                 <span className="w-1 h-3 bg-white rounded-full" />
               </div>
             ) : (
-              // Play Icon
               <svg className="w-3 h-3 fill-current text-white pl-0.5" viewBox="0 0 24 24">
                 <path d="M8 5v14l11-7z" />
               </svg>
@@ -335,18 +325,16 @@ export default function HeartbeatWidget() {
           </div>
         </div>
 
-        {/* Status indicator labels */}
-        <div className="text-center font-mono text-[10px] tracking-wider text-zinc-500 space-y-1">
+        <div className="text-center font-mono text-[9px] sm:text-[10px] tracking-wider text-zinc-500 space-y-1">
           <div className="font-bold text-zinc-700 uppercase">
             {isPlayingSong ? '💿 SONG SPINNING (35% VOL)' : '💿 SONG PAUSED'}
           </div>
-          <div>Scroll to the love letter to trigger autoplay.</div>
+          <div>Scroll down to read the letter and trigger autoplay.</div>
         </div>
 
-        {/* Heartbeat Mute Button */}
         <button
           onClick={() => setAudioEnabled(prev => !prev)}
-          className={`interactive px-4 py-1.5 rounded-full border text-[10px] font-mono tracking-wider transition-all duration-300 ${
+          className={`interactive px-4 py-1.5 rounded-full border text-[9px] sm:text-[10px] font-mono tracking-wider transition-all duration-300 ${
             audioEnabled
               ? 'bg-red-50/50 border-red-200 text-rose-500 hover:bg-red-100'
               : 'bg-zinc-50 border-zinc-200 text-zinc-400 hover:bg-zinc-100'

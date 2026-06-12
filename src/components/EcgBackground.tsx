@@ -37,7 +37,7 @@ export default function EcgBackground() {
   return (
     <div className="fixed inset-0 w-screen h-screen -z-10 pointer-events-none select-none overflow-hidden bg-transparent">
       
-      {/* Subtle Clinical Red Grid overlay */}
+      {/* High-visibility clinical red grid */}
       <div className="absolute inset-0 bg-[linear-gradient(rgba(239,68,68,0.045)_1px,transparent_1px),linear-gradient(90deg,rgba(239,68,68,0.045)_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />
 
       {/* SVG Container for EKG trace (centered behind the heart) */}
@@ -89,14 +89,14 @@ export default function EcgBackground() {
         </circle>
       </svg>
 
-      {/* 4. Telemetry Readout in the Background (Replaced AIIMS references) */}
-      <div className="absolute right-12 top-1/4 -translate-y-1/2 flex flex-col items-end opacity-[0.15] font-mono text-rose-600 pointer-events-none text-right">
-        <div className="flex items-baseline gap-2">
-          <span className="text-9xl font-black tracking-tighter drop-shadow-[0_0_12px_rgba(239,68,68,0.5)]">{bpm}</span>
-          <span className="text-2xl font-bold">BPM</span>
+      {/* 4. Highly visible watermark digital telemetry readout - Sized Responsively for Mobile */}
+      <div className="absolute right-6 sm:right-12 top-1/4 -translate-y-1/2 flex flex-col items-end opacity-[0.15] font-mono text-rose-600 pointer-events-none text-right">
+        <div className="flex items-baseline gap-1.5">
+          <span className="text-6xl sm:text-9xl font-black tracking-tighter drop-shadow-[0_0_12px_rgba(239,68,68,0.5)]">{bpm}</span>
+          <span className="text-xl sm:text-2xl font-bold">BPM</span>
         </div>
-        <div className="text-sm font-bold tracking-widest mt-2">MANSINGH ♡ FALAK</div>
-        <div className="text-xs space-y-0.5 mt-1">
+        <div className="text-xs sm:text-sm font-bold tracking-widest mt-1 sm:mt-2">MANSINGH ♡ FALAK</div>
+        <div className="text-[9px] sm:text-xs space-y-0.5 mt-0.5 sm:mt-1">
           <div>UDAIPUR: FOREVER</div>
           <div>EST: JEEVANSATHI</div>
           <div>STATUS: COMPATIBLE</div>
